@@ -30,6 +30,6 @@ Depends:
         wbs,
         ocp,
         ffstream,
-        DeCAFS
+        DeCAFS,
+        LaplacesDemon
         
-
