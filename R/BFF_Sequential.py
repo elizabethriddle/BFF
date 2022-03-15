@@ -152,7 +152,7 @@ BFF_gaussian_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,gra
   }
 
   if((post_p == TRUE) & (pred_p == FALSE)){
-  return(list(
+    return(list(
       anomalous_mu_threshold_sw = anomalous_mu_threshold_sw,
       anomalous_lambda_threshold_sw = anomalous_lambda_threshold_sw,
       p_values_change_mu=p_values_change_mu,
@@ -467,56 +467,56 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
 
   gamma_values <- c()
   lambda_values <- c()
-  
-   
+
+
   for(i in c(1:length(data))){
     model_results <- poisson_unknown_rate_BFF_sequential(data[i],N_values_old,D_values_old,F_values_old,alpha_0_prior_value,beta_0_prior_value,alpha_prior_value,beta_prior_value)
     #print(c(i,tail(N_values,1),tail(D_values,1),tail(M_values,1),tail(lambda_values,1)))
     gamma_values <- c(gamma_values,model_results$gamma_estimate)
     lambda_values <- c(lambda_values,model_results$lambda_estimate)
-    
+
     if(i>1){
       gamma_alpha_0 <- (N_values_old)+alpha_0_prior_value
       gamma_beta_0 <- beta_0_prior_value + D_values_old
       if(post_p == TRUE){
-      if(model_results$gamma_estimate>((gamma_alpha_0-1)/(gamma_beta_0))){
-        p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = F))
-      }else{
-        p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = T))
-      }
-      p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data[i-1],N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
+        if(model_results$gamma_estimate>((gamma_alpha_0-1)/(gamma_beta_0))){
+          p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = F))
+        }else{
+          p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = T))
+        }
+        p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data[i-1],N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
       }
       if(pred_p == TRUE){
-      p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data[i],N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
+        p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data[i],N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
       }
-     }
+    }
 
     if(i>=(sw+2)){
       if(post_p == TRUE){
-      p_values_ecdf_gamma <- ecdf(p_values_change_gamma[c(1:sw)+(length(p_values_change_gamma)-(sw+1))])
-      for(j in c(1:length(threshold_val))){
-        anomalous_gamma_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_gamma(p_values_change_gamma[length(p_values_change_gamma)]),anomalous_gamma_threshold_sw[[j]],threshold_val[j],grace_period)
-      }
+        p_values_ecdf_gamma <- ecdf(p_values_change_gamma[c(1:sw)+(length(p_values_change_gamma)-(sw+1))])
+        for(j in c(1:length(threshold_val))){
+          anomalous_gamma_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_gamma(p_values_change_gamma[length(p_values_change_gamma)]),anomalous_gamma_threshold_sw[[j]],threshold_val[j],grace_period)
+        }
 
-      p_values_ecdf_lambda <- ecdf(p_values_change_lambda[c(1:sw)+(length(p_values_change_lambda)-(sw+1))])
-      for(j in c(1:length(threshold_val))){
-        anomalous_lambda_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_lambda(p_values_change_lambda[length(p_values_change_lambda)]),anomalous_lambda_threshold_sw[[j]],threshold_val[j],grace_period)
-      }
+        p_values_ecdf_lambda <- ecdf(p_values_change_lambda[c(1:sw)+(length(p_values_change_lambda)-(sw+1))])
+        for(j in c(1:length(threshold_val))){
+          anomalous_lambda_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_lambda(p_values_change_lambda[length(p_values_change_lambda)]),anomalous_lambda_threshold_sw[[j]],threshold_val[j],grace_period)
+        }
       }
       if(pred_p == TRUE){
-      p_values_ecdf_pred <- ecdf(p_values_change_pred[c(1:sw)+(length(p_values_change_pred)-(sw+1))])
-      for(j in c(1:length(threshold_val))){
-        anomalous_pred_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_pred(p_values_change_pred[length(p_values_change_pred)]),anomalous_pred_threshold_sw[[j]],threshold_val[j],grace_period)
-      }
+        p_values_ecdf_pred <- ecdf(p_values_change_pred[c(1:sw)+(length(p_values_change_pred)-(sw+1))])
+        for(j in c(1:length(threshold_val))){
+          anomalous_pred_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_pred(p_values_change_pred[length(p_values_change_pred)]),anomalous_pred_threshold_sw[[j]],threshold_val[j],grace_period)
+        }
       }
 
       # remove a value from p_values
       if(post_p == TRUE){
-      p_values_change_gamma <- p_values_change_gamma[-1]
-      p_values_change_lambda <- p_values_change_lambda[-1]
+        p_values_change_gamma <- p_values_change_gamma[-1]
+        p_values_change_lambda <- p_values_change_lambda[-1]
       }
       if(pred_p == TRUE){
-      p_values_change_pred <- p_values_change_pred[-1]
+        p_values_change_pred <- p_values_change_pred[-1]
       }
     }
 
@@ -541,7 +541,7 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
       anomalous_pred_threshold_sw = anomalous_pred_threshold_sw,
       p_values_change_pred = p_values_change_pred,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
@@ -561,7 +561,7 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
       p_values_change_gamma = p_values_change_gamma,
       p_values_change_lambda =  p_values_change_lambda,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
@@ -572,14 +572,14 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
       beta_0_prior_value_old = beta_0_prior_value_old,
       alpha_0_prior_value = alpha_0_prior_value,
       beta_0_prior_value = beta_0_prior_value
-  ))
+    ))
   }
   if((post_p == FALSE) & (pred_p == TRUE)){
     return(list(
       anomalous_pred_threshold_sw = anomalous_pred_threshold_sw,
       p_values_change_pred = p_values_change_pred,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
@@ -634,7 +634,7 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
 #' @export
 
 
-BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=20,sw=2000,alpha=39,beta=1.8,post_p = TRUE,pred_p = TRUE,
+BFF_poisson_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=20,sw=2000,alpha=39,beta=1.8,post_p = TRUE,pred_p = TRUE,
                                     current_gamma,current_lambda,N_values_old_old,D_values_old_old,F_values_old_old,N_values_old,D_values_old,F_values_old,
                                     alpha_0_prior_value_old,beta_0_prior_value_old,
                                     alpha_0_prior_value,beta_0_prior_value,
@@ -644,49 +644,49 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
   model_results <- poisson_unknown_rate_BFF_sequential(data[i],N_values_old,D_values_old,F_values_old,alpha_0_prior_value,beta_0_prior_value,alpha_prior_value,beta_prior_value)
   gamma_values <- c(gamma_values,model_results$gamma_estimate)
   lambda_values <- c(lambda_values,model_results$lambda_estimate)
-    
+
   gamma_alpha_0 <- (N_values_old)+alpha_0_prior_value
   gamma_beta_0 <- beta_0_prior_value + D_values_old
   if(post_p == TRUE){
-  if(model_results$gamma_estimate>((gamma_alpha_0-1)/(gamma_beta_0))){
-    p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = F))
-  }else{
-    p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = T))
-  }
-  p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data[i-1],N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
+    if(model_results$gamma_estimate>((gamma_alpha_0-1)/(gamma_beta_0))){
+      p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = F))
+    }else{
+      p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = T))
+    }
+    p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data[i-1],N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
   }
   if(pred_p == TRUE){
-  p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data[i],N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
+    p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data[i],N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
   }
-     
+
 
   if(post_p == TRUE){
-  p_values_ecdf_gamma <- ecdf(p_values_change_gamma[c(1:sw)+(length(p_values_change_gamma)-(sw+1))])
-  for(j in c(1:length(threshold_val))){
-    anomalous_gamma_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_gamma(p_values_change_gamma[length(p_values_change_gamma)]),anomalous_gamma_threshold_sw[[j]],threshold_val[j],grace_period)
-  }
+    p_values_ecdf_gamma <- ecdf(p_values_change_gamma[c(1:sw)+(length(p_values_change_gamma)-(sw+1))])
+    for(j in c(1:length(threshold_val))){
+      anomalous_gamma_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_gamma(p_values_change_gamma[length(p_values_change_gamma)]),anomalous_gamma_threshold_sw[[j]],threshold_val[j],grace_period)
+    }
 
-  p_values_ecdf_lambda <- ecdf(p_values_change_lambda[c(1:sw)+(length(p_values_change_lambda)-(sw+1))])
-  for(j in c(1:length(threshold_val))){
-    anomalous_lambda_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_lambda(p_values_change_lambda[length(p_values_change_lambda)]),anomalous_lambda_threshold_sw[[j]],threshold_val[j],grace_period)
-  }
+    p_values_ecdf_lambda <- ecdf(p_values_change_lambda[c(1:sw)+(length(p_values_change_lambda)-(sw+1))])
+    for(j in c(1:length(threshold_val))){
+      anomalous_lambda_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_lambda(p_values_change_lambda[length(p_values_change_lambda)]),anomalous_lambda_threshold_sw[[j]],threshold_val[j],grace_period)
+    }
   }
   if(pred_p == TRUE){
-  p_values_ecdf_pred <- ecdf(p_values_change_pred[c(1:sw)+(length(p_values_change_pred)-(sw+1))])
-  for(j in c(1:length(threshold_val))){
-    anomalous_pred_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_pred(p_values_change_pred[length(p_values_change_pred)]),anomalous_pred_threshold_sw[[j]],threshold_val[j],grace_period)
-  }
+    p_values_ecdf_pred <- ecdf(p_values_change_pred[c(1:sw)+(length(p_values_change_pred)-(sw+1))])
+    for(j in c(1:length(threshold_val))){
+      anomalous_pred_threshold_sw[[j]] <- threshold_p_value_detector_seq(i,p_values_ecdf_pred(p_values_change_pred[length(p_values_change_pred)]),anomalous_pred_threshold_sw[[j]],threshold_val[j],grace_period)
+    }
   }
 
   # remove a value from p_values
   if(post_p == TRUE){
-  p_values_change_gamma <- p_values_change_gamma[-1]
-  p_values_change_lambda <- p_values_change_lambda[-1]
+    p_values_change_gamma <- p_values_change_gamma[-1]
+    p_values_change_lambda <- p_values_change_lambda[-1]
   }
   if(pred_p == TRUE){
-  p_values_change_pred <- p_values_change_pred[-1]
+    p_values_change_pred <- p_values_change_pred[-1]
   }
-    
+
 
   N_values_old_old <- N_values_old
   D_values_old_old <- D_values_old
@@ -699,7 +699,7 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
   alpha_0_prior_value <- model_results$gamma_estimate+1
   beta_0_prior_value <- 1
 
-  
+
   if((post_p == TRUE) & (pred_p == TRUE)){
     return(list(
       anomalous_gamma_threshold_sw = anomalous_gamma_threshold_sw,
@@ -709,7 +709,7 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
       anomalous_pred_threshold_sw = anomalous_pred_threshold_sw,
       p_values_change_pred = p_values_change_pred,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
@@ -730,7 +730,7 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
       p_values_change_gamma = p_values_change_gamma,
       p_values_change_lambda =  p_values_change_lambda,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
@@ -742,7 +742,7 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
       beta_0_prior_value_old = beta_0_prior_value_old,
       alpha_0_prior_value = alpha_0_prior_value,
       beta_0_prior_value = beta_0_prior_value
-  ))
+    ))
   }
   if((post_p == FALSE) & (pred_p == TRUE)){
     return(list(
@@ -766,4 +766,3 @@ BFF_poisson_seq_initial <- function(data,i,threshold_val = c(0.05),grace_period=
 
 
 }
-
