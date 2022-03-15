@@ -1,11 +1,35 @@
 Package: BFF
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Sequential Adaptive Parameter Estimation and Change Point Detection
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: 
+    person(given = "Elizabeth",
+           family = "Riddle-Workman",
+           role = c("aut", "cre"),
+           email = "elizabeth.riddle-workman13@imperial.ac.uk",
+           comment = c(ORCID = "0000-0003-3851-8676"))
+Description: Functions for detecting abrupt change points in the presence of trend or local fluctuations. The procedure is sequential for fast updates and is appropriate for application to data streams.
+License: `use_gpl3_license()`
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0
+Imports:
+        Matrix,
+        ggplot2,
+        grid,
+        gridExtra,
+        matrixStats,
+        plyr,
+        invgamma,
+        rootSolve,
+        gmm,
+        ks,
+        ModelMetrics,
+        changepoint,
+        wbs,
+        ocp,
+        ffstream,
+        DeCAFS
+        
+
