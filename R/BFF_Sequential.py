@@ -749,7 +749,7 @@ BFF_poisson_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=2
       anomalous_pred_threshold_sw = anomalous_pred_threshold_sw,
       p_values_change_pred = p_values_change_pred,
       gamma_values = gamma_values,
-      lambda_values = lambda_values
+      lambda_values = lambda_values,
       N_values_old_old = N_values_old_old,
       D_values_old_old = D_values_old_old,
       F_values_old_old = F_values_old_old,
