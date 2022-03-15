@@ -59,6 +59,13 @@ BFF_predictive_p_value_calculator_approx <- function(x_new,muhat,N_value,D_value
   return(calculated_p_value)
 }
 
+threshold_p_value_detector <- function(p_values,threshold_val,burn_out){
+  anom_p_vals <- which(p_values<threshold_val)
+  difference_vals <- diff(anom_p_vals)
+  not_anom<-which(difference_vals>burn_out)
+  true_anom_p_vals <- anom_p_vals[c(1,not_anom+1)]
+  return(true_anom_p_vals)
+}
 
 threshold_p_value_detector_seq <- function(i,p_value,current_anom,threshold_val,burn_out){
   is_anom <- p_value<threshold_val
@@ -91,4 +98,3 @@ lambda_posterior_poisson_unk_rate_sequential_beta_prior_log <- function(lambda,d
     (lambda*F_prev+lfactorial(data_new))
   return(output_value)
 }
-
