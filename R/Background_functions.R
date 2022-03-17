@@ -1,6 +1,20 @@
-# Background functions
-
-gaussian_unknown_mean_var_BFF_sequential <- function(data_new,N_prev,D_prev,M_prev,mu_0,sigma2_0,alpha_0,beta_0,alpha=39,beta=1.8,t=0){
+#' Calculate Gaussian BFF update
+#'
+#'
+#' @param data_new new data point
+#' @param N_prev N previous value
+#' @param D_prev D previous value
+#' @param M_prev M previous value
+#' @param mu_0 prior mean for mu
+#' @param sigma2_0 prior variance value for mu
+#' @param alpha_0 alpha for sigma^2 prior
+#' @param beta_0 beta for sigma^2 prior
+#' @param alpha alpha for lambda prior
+#' @param beta beta for lambda prior
+#'
+#' @return List containing updated hyperparameters and estimates
+#' @export
+gaussian_unknown_mean_var_BFF_sequential <- function(data_new,N_prev,D_prev,M_prev,mu_0,sigma2_0,alpha_0,beta_0,alpha=39,beta=1.8){
   lambda_estimate <- optimise(lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log,c(0,1),data_new=data_new,N_prev=N_prev,D_prev=D_prev,M_prev=M_prev,mu_0=mu_0,sigma2_0=sigma2_0,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta,maximum=TRUE)
   N_new <- (lambda_estimate$maximum)*N_prev + (data_new)
   D_new <- (lambda_estimate$maximum)*D_prev + 1
@@ -12,6 +26,25 @@ gaussian_unknown_mean_var_BFF_sequential <- function(data_new,N_prev,D_prev,M_pr
 }
 
 
+
+
+#' Lambda posterior function logged
+#'
+#'
+#' @param lambda last lambda value
+#' @param data_new new data point
+#' @param N_prev N previous value
+#' @param D_prev D previous value
+#' @param M_prev M previous value
+#' @param mu_0 prior mean for mu
+#' @param sigma2_0 prior variance value for mu
+#' @param alpha_0 alpha for sigma^2 prior
+#' @param beta_0 beta for sigma^2 prior
+#' @param alpha alpha for lambda prior
+#' @param beta beta for lambda prior
+#'
+#' @return Value of posterior
+#' @export
 lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log <- function(lambda,data_new,N_prev,D_prev,M_prev,mu_0,sigma2_0,alpha_0,beta_0,alpha=39,beta=1.8){
 
 
@@ -23,6 +56,26 @@ lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log <- function(lambda,da
   return(output_value)
 }
 
+
+
+
+#' Lambda posterior function
+#'
+#'
+#' @param lambda last lambda value
+#' @param data_new new data point
+#' @param N_prev N previous value
+#' @param D_prev D previous value
+#' @param M_prev M previous value
+#' @param mu_0 prior mean for mu
+#' @param sigma2_0 prior variance value for mu
+#' @param alpha_0 alpha for sigma^2 prior
+#' @param beta_0 beta for sigma^2 prior
+#' @param alpha alpha for lambda prior
+#' @param beta beta for lambda prior
+#'
+#' @return Value of posterior
+#' @export
 lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_unnorm <- function(lambda,data_new,N_prev,D_prev,M_prev,mu_0,sigma2_0,alpha_0,beta_0,alpha=39,beta=1.8){
 
 
@@ -45,6 +98,17 @@ lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_unnorm <- function(lambda
 }
 
 
+
+
+#' Calculates p value by integrating at extremes
+#'
+#'
+#' @param FUNC function to integrate over
+#' @param v the upller value to integrate to
+#' @param ... additional inputs
+#'
+#' @return p value returned
+#' @export
 p_value_calculator_lambda <- function(FUNC,v,...){
   # Find normalising constant:
   normalising_constant <- integrate(FUNC,0,1,...)$value
@@ -55,6 +119,22 @@ p_value_calculator_lambda <- function(FUNC,v,...){
 }
 
 
+
+#' BFF predictive p value calculator
+#'
+#'
+#' @param x_new new data point
+#' @param muhat mu estimate
+#' @param N_value N Value
+#' @param D_value D Value
+#' @param M_value M Value
+#' @param mu_0_prior_value mean prior value for mu
+#' @param sigma2_0_prior_value var prior value for mu
+#' @param sigma2_alpha_0_prior_value alpha for sigma2 prior
+#' @param sigma2_beta_0_prior_value beta for sigma2 prior
+#'
+#' @return predictive posterior p-value
+#' @export
 BFF_predictive_p_value_calculator_approx <- function(x_new,muhat,N_value,D_value,M_value,mu_0_prior_value,sigma2_0_prior_value,sigma2_alpha_0_prior_value,sigma2_beta_0_prior_value){
   khat <- (1/sigma2_0_prior_value)+D_value
   alphahat <- (D_value/2) + sigma2_alpha_0_prior_value
@@ -80,6 +160,17 @@ BFF_predictive_p_value_calculator_approx <- function(x_new,muhat,N_value,D_value
   return(calculated_p_value)
 }
 
+
+
+#' Detect if p value is anomlous at given threshold
+#'
+#'
+#' @param p_values p values
+#' @param threshold_val threshold
+#' @param burn_out grace period
+#'
+#' @return anomalous p vlaues
+#' @export
 threshold_p_value_detector <- function(p_values,threshold_val,burn_out){
   anom_p_vals <- which(p_values<threshold_val)
   difference_vals <- diff(anom_p_vals)
@@ -88,6 +179,19 @@ threshold_p_value_detector <- function(p_values,threshold_val,burn_out){
   return(true_anom_p_vals)
 }
 
+
+
+#' Detect if p value is anomlous at given threshold sequential version
+#'
+#'
+#' @param i current data number
+#' @param p_value p value
+#' @param current_anom current list of anomalous values
+#' @param threshold_val threshold
+#' @param burn_out grace period
+#'
+#' @return anomalous p vlaues
+#' @export
 threshold_p_value_detector_seq <- function(i,p_value,current_anom,threshold_val,burn_out){
   is_anom <- p_value<threshold_val
   if(length(current_anom)==0){
@@ -103,6 +207,22 @@ threshold_p_value_detector_seq <- function(i,p_value,current_anom,threshold_val,
 }
 
 
+
+
+#' Calculate poisson BFF update
+#'
+#'
+#' @param data_new new data point
+#' @param N_prev N prev
+#' @param D_prev D prev
+#' @param F_prev F prev
+#' @param alpha_0 rate prior alpha
+#' @param beta_0 rate prior beta
+#' @param alpha lambda prior alpha
+#' @param beta lambda prior beta
+#'
+#' @return List containing updated hyperparameters and estimates
+#' @export
 poisson_unknown_rate_BFF_sequential <- function(data_new,N_prev,D_prev,F_prev,alpha_0,beta_0,alpha,beta){
   lambda_estimate <- optimise(lambda_posterior_poisson_unk_rate_sequential_beta_prior_log,c(0,1),data_new=data_new,N_prev=N_prev,D_prev=D_prev,F_prev=F_prev,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta,maximum=TRUE)
   N_new <- (lambda_estimate$maximum)*N_prev + (data_new)
@@ -112,6 +232,26 @@ poisson_unknown_rate_BFF_sequential <- function(data_new,N_prev,D_prev,F_prev,al
   return(list(lambda_estimate=lambda_estimate$maximum,gamma_estimate=gamma_estimate,N_new=N_new,D_new=D_new,F_new=F_new))
 }
 
+
+
+
+
+
+#' Lambda posterior function logged
+#'
+#'
+#' @param lambda current lambda estimate
+#' @param data_new new data point
+#' @param N_prev N prev
+#' @param D_prev D prev
+#' @param F_prev F prev
+#' @param alpha_0 rate prior alpha
+#' @param beta_0 rate prior beta
+#' @param alpha lambda prior alpha
+#' @param beta lambda prior beta
+#'
+#' @return Value of posterior
+#' @export
 lambda_posterior_poisson_unk_rate_sequential_beta_prior_log <- function(lambda,data_new,N_prev,D_prev,F_prev,alpha_0,beta_0,alpha,beta){
   output_value <- (log(lambda)*{alpha-1})+(log(1-lambda)*{beta-1})+
     lgamma(alpha_0+(lambda*N_prev)+data_new)-
@@ -122,6 +262,16 @@ lambda_posterior_poisson_unk_rate_sequential_beta_prior_log <- function(lambda,d
 
 
 
+#' Calculate performance of CP procedure on data
+#'
+#'
+#' @param estimated_cp discovered change points
+#' @param true_cp true change points
+#' @param datasize size of data
+#' @param D_period grace period
+#'
+#' @return return all performance measures F1, ARL0, ARL1, recall, precision, no positives, FP etc
+#' @export
 performance_large_changepoint <- function(estimated_cp,true_cp,datasize,D_period){
   false_positives <- setdiff(estimated_cp,true_cp+rep(c(0:(D_period)),each=length(true_cp)))
   true_positives <- setdiff(estimated_cp,false_positives)
