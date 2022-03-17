@@ -86,6 +86,8 @@ BFF_poisson_seq_update(
 \item{anomalous_pred_threshold_sw}{current anomalous predictive posterior p-values list}
 
 \item{p_values_change_pred}{uncalibrated predictive posterior p-values}
+
+\item{data_old}{previous data point}
 }
 \value{
 return the change points detected by the algorithm for each of the dection procedures, for the different thresholds.

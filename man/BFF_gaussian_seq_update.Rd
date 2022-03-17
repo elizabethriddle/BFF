@@ -6,6 +6,7 @@
 \usage{
 BFF_gaussian_seq_update(
   data,
+  data_old,
   i,
   threshold_val = c(0.05),
   grace_period = 20,
@@ -39,6 +40,8 @@ BFF_gaussian_seq_update(
 }
 \arguments{
 \item{data}{new data point}
+
+\item{data_old}{previous data point}
 
 \item{i}{data point number}
 
