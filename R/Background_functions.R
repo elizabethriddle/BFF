@@ -23,6 +23,27 @@ lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log <- function(lambda,da
   return(output_value)
 }
 
+lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_unnorm <- function(lambda,data_new,N_prev,D_prev,M_prev,mu_0,sigma2_0,alpha_0,beta_0,alpha=39,beta=1.8){
+
+
+  if(length(lambda)>1){
+    test_values <- seq(0.7,0.95,length.out = 20)
+    rescaler <- max(sapply(test_values,lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log,data_new=data_new,N_prev=N_prev,D_prev=D_prev,M_prev=M_prev,mu_0=mu_0,sigma2_0=sigma2_0,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta))
+    results <- sapply(lambda,lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log,data_new=data_new,N_prev=N_prev,D_prev=D_prev,M_prev=M_prev,mu_0=mu_0,sigma2_0=sigma2_0,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta)
+    exp_results <- exp(results-rescaler)
+    exp_results[is.infinite(exp_results)] <- 1e300
+  }
+  else{
+    test_values <- seq(0.7,0.95,length.out = 20)
+    rescaler <- max(sapply(test_values,lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log,data_new=data_new,N_prev=N_prev,D_prev=D_prev,M_prev=M_prev,mu_0=mu_0,sigma2_0=sigma2_0,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta))
+    results <- lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_log(lambda=lambda,data_new=data_new,N_prev=N_prev,D_prev=D_prev,M_prev=M_prev,mu_0=mu_0,sigma2_0=sigma2_0,alpha_0=alpha_0,beta_0=beta_0,alpha=alpha,beta=beta)
+    exp_results <- exp(results-rescaler)
+    exp_results[is.infinite(exp_results)] <- 1e300
+  }
+
+  return(exp_results)
+}
+
 
 p_value_calculator_lambda <- function(FUNC,v,...){
   # Find normalising constant:
@@ -97,4 +118,32 @@ lambda_posterior_poisson_unk_rate_sequential_beta_prior_log <- function(lambda,d
     ((alpha_0+(lambda*N_prev)+data_new)*log(beta_0+(lambda*D_prev)+1))-
     (lambda*F_prev+lfactorial(data_new))
   return(output_value)
+}
+
+
+
+performance_large_changepoint <- function(estimated_cp,true_cp,datasize,D_period){
+  false_positives <- setdiff(estimated_cp,true_cp+rep(c(0:(D_period)),each=length(true_cp)))
+  true_positives <- setdiff(estimated_cp,false_positives)
+  true_positives_refined <- c()
+  AR1 <- c()
+  for(i in c(1:length(true_cp))){
+    possible_cp <- true_positives[(true_positives>=true_cp[i]) & (true_positives<=(true_cp[i]+D_period))]
+    if(!is.null(possible_cp)){
+      AR1 <- c(AR1,(possible_cp[which.min(possible_cp-true_cp[i])]-true_cp[i]))
+      true_positives_refined <- c(true_positives_refined,possible_cp[which.min(possible_cp-true_cp[i])])
+    }
+  }
+  AR1 <- mean(AR1,na.rm=T)
+  FP <- length(false_positives)
+  TotalPos <- (length(true_positives_refined)+length(false_positives))
+  AR0 <- mean(diff(sort(false_positives)),na.rm=T)
+  CCD <- length(true_positives_refined)/length(true_cp)
+  DNF <- length(true_positives_refined)/(length(true_positives_refined)+length(false_positives))
+  F1_val <- 2* (DNF*CCD)/(DNF+CCD)
+  if(is.na(F1_val)){
+    F1_val <- 0
+  }
+  return(list(F1=F1_val,ARL0=AR0,ARL1=AR1,CCD=CCD,DNF=DNF,FP=FP,Total_Positive=TotalPos))
+
 }
