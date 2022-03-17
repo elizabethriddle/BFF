@@ -236,6 +236,7 @@ BFF_gaussian_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,gra
 #' procedure and posterior p-values.
 #'
 #' @param data new data point
+#' @param data_old previous data point
 #' @param i data point number
 #' @param threshold_val vector of thresholds to use to assess whether new data point is a change point
 #' @param grace_period period after a change in which changes are not detected
@@ -267,7 +268,7 @@ BFF_gaussian_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,gra
 #' @param p_values_predictive uncalibrated predictive posterior p-values
 #' @return return the change points detected by the algorithm for each of the dection procedures, for the different thresholds.
 #' @export
-BFF_gaussian_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=20,sw=2000,alpha=39,beta=1.8,post_p = TRUE,pred_p = TRUE,
+BFF_gaussian_seq_update <- function(data,data_old,i,threshold_val = c(0.05),grace_period=20,sw=2000,alpha=39,beta=1.8,post_p = TRUE,pred_p = TRUE,
                                     current_mu,current_sigma2,N_values_old_old,D_values_old_old,M_values_old_old,N_values_old,D_values_old,M_values_old,
                                     mu_0_prior_value_old,sigma2_0_prior_value_old,sigma2_alpha_0_prior_value_old,sigma2_beta_0_prior_value_old,
                                     mu_0_prior_value,sigma2_alpha_0_prior_value,sigma2_beta_0_prior_value,
@@ -276,10 +277,28 @@ BFF_gaussian_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=
 
   sigma2_0_prior_value <- 1
 
-  model_results <- gaussian_unknown_mean_var_BFF_sequential(data[i],N_values_old,D_values_old,M_values_old,mu_0_prior_value,sigma2_0_prior_value,sigma2_alpha_0_prior_value,sigma2_beta_0_prior_value,alpha,beta)
+  model_results <- gaussian_unknown_mean_var_BFF_sequential(data,N_values_old,D_values_old,M_values_old,mu_0_prior_value,sigma2_0_prior_value,sigma2_alpha_0_prior_value,sigma2_beta_0_prior_value,alpha,beta)
 
 
   sigma2est <- model_results$sigma2_estimate/(model_results$D_new+(1/sigma2_0_prior_value))
+
+
+  if(post_p == TRUE){
+    if(model_results$mu_estimate<current_mu){
+      p_values_change_mu<-c(p_values_change_mu,2*pnorm(model_results$mu_estimate,current_mu,sqrt(current_sigma2/(D_values_old+(1/sigma2_0_prior_value)))))
+    }else{
+      p_values_change_mu<-c(p_values_change_mu,2*pnorm(model_results$mu_estimate,current_mu,sqrt(current_sigma2/(D_values_old+(1/sigma2_0_prior_value))),lower.tail = FALSE))
+    }
+    # find sigma posterior parameters:
+    sigma_2_alpha_0 <- (0.5*D_values_old)+sigma2_alpha_0_prior_value
+    sigma_2_beta_0 <- sigma2_beta_0_prior_value + 0.5*((mu_0_prior_value^2/sigma2_0_prior_value)+M_values_old-((N_values_old+(mu_0_prior_value/sigma2_0_prior_value))^2/(D_values_old+(1/sigma2_0_prior_value))))
+    p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_unk_mu_sigma2_sequential_2_beta_prior_unnorm,model_results$lambda_estimate,data_new=data_old,N_prev=N_values_old_old,D_prev=D_values_old_old,M_prev=M_values_old_old,mu_0=mu_0_prior_value_old,sigma2_0=sigma2_0_prior_value_old,alpha_0=sigma2_alpha_0_prior_value_old,beta_0=sigma2_beta_0_prior_value_old,alpha=alpha,beta=beta))
+
+
+  }
+  if(pred_p == TRUE){
+    p_values_predictive <- c(p_values_predictive,BFF_predictive_p_value_calculator_approx(data,current_mu,N_values_old,D_values_old,M_values_old,mu_0_prior_value_old,sigma2_0_prior_value_old,sigma2_alpha_0_prior_value_old,sigma2_beta_0_prior_value_old))
+  }
 
   if(post_p == TRUE){
     p_values_ecdf_mu <- ecdf(p_values_change_mu[c(1:sw)+(length(p_values_change_mu)-(sw+1))])
@@ -604,6 +623,7 @@ BFF_poisson_seq_initial <- function(data,threshold_val = c(0.05),burnin=200,grac
 #' procedure and predictive posterior p-values. Additionally estimates parameters
 #'
 #' @param data new data point
+#' @param data_old previous data point
 #' @param i data point number
 #' @param threshold_val vector of thresholds to use to assess whether new data point is a change point
 #' @param grace_period period after a change in which changes are not detected
@@ -641,7 +661,7 @@ BFF_poisson_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=2
                                     anomalous_gamma_threshold_sw,anomalous_lambda_threshold_sw,p_values_change_gamma,
                                     p_values_change_lambda,anomalous_pred_threshold_sw,p_values_change_pred){
 
-  model_results <- poisson_unknown_rate_BFF_sequential(data[i],N_values_old,D_values_old,F_values_old,alpha_0_prior_value,beta_0_prior_value,alpha_prior_value,beta_prior_value)
+  model_results <- poisson_unknown_rate_BFF_sequential(data,N_values_old,D_values_old,F_values_old,alpha_0_prior_value,beta_0_prior_value,alpha_prior_value,beta_prior_value)
   gamma_values <- c(gamma_values,model_results$gamma_estimate)
   lambda_values <- c(lambda_values,model_results$lambda_estimate)
 
@@ -653,10 +673,10 @@ BFF_poisson_seq_update <- function(data,i,threshold_val = c(0.05),grace_period=2
     }else{
       p_values_change_gamma<-c(p_values_change_gamma,pgamma(model_results$gamma_estimate,gamma_alpha_0,gamma_beta_0,lower.tail = T))
     }
-    p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data[i-1],N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
+    p_values_change_lambda<-c(p_values_change_lambda,p_value_calculator_lambda(lambda_posterior_poisson_unk_rate_sequential_beta_prior_unnorm,model_results$lambda_estimate,data_new=data_old,N_prev=N_values_old_old,D_prev=D_values_old_old,F_prev=F_values_old_old,alpha_0=alpha_0_prior_value_old,beta_0=beta_0_prior_value_old,alpha=39,beta=1.8))
   }
   if(pred_p == TRUE){
-    p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data[i],N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
+    p_values_change_pred <- c(p_values_change_pred,BFF_predictive_p_value_calculator_approx_poisson(x_new=data,N_value=N_values_old,D_value=D_values_old,alpha_0_prior_value=alpha_0_prior_value_old,beta_0_prior_value=beta_0_prior_value_old))
   }
 
 
